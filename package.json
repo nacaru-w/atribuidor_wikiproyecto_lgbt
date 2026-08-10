@@ -1,0 +1,25 @@
+{
+  "name": "atribuidor_wikiproyecto_lgbt",
+  "version": "1.0.0",
+  "description": "A script allowing quick Wikiproyecto LGBT+ attribution for articles created on the Spanish Wikipedia",
+  "keywords": [
+    "Wikipedia",
+    "eswiki",
+    "script"
+  ],
+  "homepage": "https://github.com/nacaru-w/atribuidor_wikiproyecto_lgbt#readme",
+  "bugs": {
+    "url": "https://github.com/nacaru-w/atribuidor_wikiproyecto_lgbt/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nacaru-w/atribuidor_wikiproyecto_lgbt.git"
+  },
+  "license": "GPL-3.0-only",
+  "author": "Nacaru",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
