@@ -2,11 +2,11 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["ES2017", "DOM"],
-    "module": "es2015",
-    "rootDir": "src",
-    "outDir": "dist",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "strict": true,
-    "noEmitOnError": true
+    "types": ["jquery", "oojs-ui", "types-mediawiki"],
+    "noEmit": true
   },
-  "include": ["src/atribuidor.ts"]
+  "include": ["src"]
 }
