@@ -1,0 +1,35 @@
+.atribuidor-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 0.5em;
+    padding: 4px;
+    vertical-align: middle;
+    cursor: default;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1;
+    color: #202122;
+}
+
+.atribuidor-button.atribuidor-button-actionable {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border-color: #a2a9b1;
+}
+
+.atribuidor-button.atribuidor-button-actionable:hover {
+    background-color: #ffffff;
+    border-color: #72777d;
+}
+
+.atribuidor-button.atribuidor-button-actionable:active {
+    background-color: #eaecf0;
+}
+
+.atribuidor-button img {
+    height: 20px;
+}
