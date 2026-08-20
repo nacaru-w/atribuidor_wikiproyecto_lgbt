@@ -20,8 +20,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "build": "tsc && esbuild src/atribuidor.ts --bundle --format=iife --target=es2017 --charset=utf8 --outfile=dist/atribuidor.js",
-    "watch": "esbuild src/atribuidor.ts --bundle --format=iife --target=es2017 --charset=utf8 --outfile=dist/atribuidor.js --watch",
+    "build": "tsc && esbuild src/atribuidor.ts --bundle --format=iife --target=es2017 --charset=utf8 --loader:.css=text --outfile=dist/atribuidor.js",
+    "watch": "esbuild src/atribuidor.ts --bundle --format=iife --target=es2017 --charset=utf8 --loader:.css=text --outfile=dist/atribuidor.js --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
