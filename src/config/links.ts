@@ -1,6 +1,8 @@
 export const links = {
     /** Page listing the articles created by the wikiproject */
     articleList: 'Wikiproyecto:LGBT/Artículos creados',
+    /** Base title of the monthly event pages, followed by /<year>/<month> */
+    monthlyEventBase: 'Wikiproyecto:LGBT/Evento del mes',
     // TODO: confirm the exact title of the counter page
     /** Page holding the created-articles counter */
     articleCounter: 'Wikipedia:Wikiproyecto LGBT+/Contador de artículos creados',
