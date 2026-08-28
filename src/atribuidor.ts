@@ -1,9 +1,12 @@
+import { addArticleToMonthlyEvent } from './actions/addArticleToMonthlyEvent';
 import { addCreatedArticleToList } from './actions/addCreatedArticleToList';
 import { addProjectTemplate } from './actions/addProjectTemplate';
 import { updateArticleCounter } from './actions/updateArticleCounter';
 import { links } from './config/links';
 import { getMessage } from './i18n/translations';
 import { isArticleOnCreatedList } from './queries/isArticleOnCreatedList';
+import { confirmAttribution } from './ui/confirmAttribution';
+import { MonthlyEventDetails, confirmMonthlyEventAddition, promptMonthlyEventDetails } from './ui/monthlyEventDialog';
 import buttonStyles from './styles/atribuidor.css';
 
 declare global {
@@ -48,7 +51,7 @@ async function main(): Promise<void> {
         mw.notify(text, { type: 'error', autoHide: false });
     }
 
-    async function attribute(): Promise<boolean> {
+    async function attribute(monthlyEventDetails: MonthlyEventDetails | null): Promise<boolean> {
         try {
             await showStatus(getMessage('status-template'));
             await addProjectTemplate();
@@ -58,6 +61,11 @@ async function main(): Promise<void> {
 
             await showStatus(getMessage('status-counter'));
             await updateArticleCounter();
+
+            if (monthlyEventDetails) {
+                await showStatus(getMessage('status-monthly-event'));
+                await addArticleToMonthlyEvent(monthlyEventDetails);
+            }
 
             notifySuccess();
             return true;
@@ -113,7 +121,20 @@ async function main(): Promise<void> {
         button.append(logo, indicator);
         button.addEventListener('click', async () => {
             button.disabled = true;
-            if (await attribute()) {
+
+            if (!(await confirmAttribution())) {
+                button.disabled = false;
+                return;
+            }
+
+            let monthlyEventDetails: MonthlyEventDetails | null = null;
+            if (await confirmMonthlyEventAddition()) {
+                // A cancelled dialog (null) skips the monthly event step
+                // without aborting the rest of the attribution.
+                monthlyEventDetails = await promptMonthlyEventDetails();
+            }
+
+            if (await attribute(monthlyEventDetails)) {
                 markAsAttributed();
             } else {
                 button.disabled = false;
