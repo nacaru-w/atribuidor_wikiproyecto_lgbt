@@ -15,6 +15,17 @@ const translations = {
         'summary-counter': 'Actualizando el contador de artículos creados ([[WP:AtribuidorLGBT|Atribuidor]])',
         'button-tooltip': 'Atribuir este artículo al Wikiproyecto LGBT+',
         'button-tooltip-done': 'Este artículo ya está en la lista de artículos creados del Wikiproyecto LGBT+',
+        'attribution-confirm': '¿Quieres atribuir el artículo al Wikiproyecto LGBT+?',
+        'monthly-event-confirm': '¿Quieres añadir también este artículo a la tabla del evento del mes?',
+        'monthly-event-dialog-title': 'Añadir al evento del mes',
+        'monthly-event-origin-label': 'Tipo de artículo',
+        'monthly-event-origin-created': 'Artículo de nueva creación',
+        'monthly-event-origin-translated': 'Traducción',
+        'monthly-event-wikidata-label': 'Elemento de Wikidata (p. ej. Q91725538)',
+        'monthly-event-accept': 'Añadir',
+        'monthly-event-cancel': 'Cancelar',
+        'status-monthly-event': 'Añadiendo el artículo a la tabla del evento del mes…',
+        'summary-monthly-event': 'Añadiendo artículo a la tabla del evento del mes ([[WP:AtribuidorLGBT|Atribuidor]])',
     },
 } as const;
 
