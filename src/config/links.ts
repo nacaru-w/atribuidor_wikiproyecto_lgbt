@@ -3,6 +3,8 @@ export const links = {
     articleList: 'Wikiproyecto:LGBT/Artículos creados',
     /** Base title of the monthly event pages, followed by /<year>/<month> */
     monthlyEventBase: 'Wikiproyecto:LGBT/Evento del mes',
+    /** Page listing the wikiproject's participants */
+    participantList: 'Wikiproyecto:LGBT/participantes',
     /** Wikiproject logo shown on the trigger button */
     logo: 'https://upload.wikimedia.org/wikipedia/commons/3/32/Barba-wikiproyecto-lgbt.svg',
     /** Spinner shown while the created-articles list is being checked */

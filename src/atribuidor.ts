@@ -3,8 +3,11 @@ import { addCreatedArticleToList } from './actions/addCreatedArticleToList';
 import { addProjectTemplate } from './actions/addProjectTemplate';
 import { links } from './config/links';
 import { getMessage } from './i18n/translations';
+import { getArticleCreator } from './queries/getArticleCreator';
 import { isArticleOnCreatedList } from './queries/isArticleOnCreatedList';
+import { isUserOnParticipantList } from './queries/isUserOnParticipantList';
 import { confirmAttribution } from './ui/confirmAttribution';
+import { confirmNonParticipantAddition } from './ui/confirmNonParticipantAddition';
 import { MonthlyEventDetails, confirmMonthlyEventAddition, promptMonthlyEventDetails } from './ui/monthlyEventDialog';
 import buttonStyles from './styles/atribuidor.css';
 
@@ -40,15 +43,18 @@ async function main(): Promise<void> {
         }
     }
 
-    function notifySuccess(): void {
+    function closeStatus(): void {
         statusNotification?.close();
         statusNotification = null;
-        mw.notify(getMessage('success'), { type: 'success' });
+    }
+
+    function notifySuccess(text: string): void {
+        closeStatus();
+        mw.notify(text, { type: 'success' });
     }
 
     function notifyError(text: string): void {
-        statusNotification?.close();
-        statusNotification = null;
+        closeStatus();
         mw.notify(text, { type: 'error', autoHide: false });
     }
 
@@ -65,7 +71,7 @@ async function main(): Promise<void> {
                 await addArticleToMonthlyEvent(articleTitle, monthlyEventDetails);
             }
 
-            notifySuccess();
+            notifySuccess(getMessage('success'));
             return true;
         } catch (error) {
             notifyError(getMessage('error'));
@@ -125,11 +131,32 @@ async function main(): Promise<void> {
                 return;
             }
 
+            let isCreatorParticipant: boolean;
+            try {
+                await showStatus(getMessage('status-participant-check'));
+                const creator = await getArticleCreator(articleTitle);
+                isCreatorParticipant = await isUserOnParticipantList(creator);
+            } catch (error) {
+                notifyError(getMessage('error'));
+                console.error('[Atribuidor]', error);
+                button.disabled = false;
+                return;
+            }
+
+            // A non-participant creator may still be fine (e.g. an article
+            // rewritten by a participant), so it only warrants a confirmation.
+            if (!isCreatorParticipant && !(await confirmNonParticipantAddition())) {
+                closeStatus();
+                button.disabled = false;
+                return;
+            }
+
             let monthlyEventDetails: MonthlyEventDetails | null = null;
             if (await confirmMonthlyEventAddition()) {
                 monthlyEventDetails = await promptMonthlyEventDetails();
                 // A cancelled dialog (null) aborts the whole attribution.
                 if (!monthlyEventDetails) {
+                    closeStatus();
                     button.disabled = false;
                     return;
                 }
