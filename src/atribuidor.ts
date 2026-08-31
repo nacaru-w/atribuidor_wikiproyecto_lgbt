@@ -2,7 +2,7 @@ import { addArticleToMonthlyEvent } from './actions/addArticleToMonthlyEvent';
 import { addCreatedArticleToList } from './actions/addCreatedArticleToList';
 import { addProjectTemplate } from './actions/addProjectTemplate';
 import { links } from './config/links';
-import { getMessage } from './i18n/translations';
+import { MessageKey, getMessage } from './i18n/translations';
 import { getArticleCreator } from './queries/getArticleCreator';
 import { isArticleOnCreatedList } from './queries/isArticleOnCreatedList';
 import { isUserOnParticipantList } from './queries/isUserOnParticipantList';
@@ -59,14 +59,18 @@ async function main(): Promise<void> {
     }
 
     async function attribute(monthlyEventDetails: MonthlyEventDetails | null): Promise<boolean> {
+        // Tracks the running step so a failure can be reported specifically
+        let errorKey: MessageKey = 'error-template';
         try {
             await showStatus(getMessage('status-template'));
             await addProjectTemplate(articleTitle);
 
+            errorKey = 'error-list';
             await showStatus(getMessage('status-list'));
             await addCreatedArticleToList(articleTitle);
 
             if (monthlyEventDetails) {
+                errorKey = 'error-monthly-event';
                 await showStatus(getMessage('status-monthly-event'));
                 await addArticleToMonthlyEvent(articleTitle, monthlyEventDetails);
             }
@@ -74,7 +78,7 @@ async function main(): Promise<void> {
             notifySuccess(getMessage('success'));
             return true;
         } catch (error) {
-            notifyError(getMessage('error'));
+            notifyError(getMessage(errorKey));
             console.error('[Atribuidor]', error);
             return false;
         }
@@ -137,7 +141,7 @@ async function main(): Promise<void> {
                 const creator = await getArticleCreator(articleTitle);
                 isCreatorParticipant = await isUserOnParticipantList(creator);
             } catch (error) {
-                notifyError(getMessage('error'));
+                notifyError(getMessage('error-participant-check'));
                 console.error('[Atribuidor]', error);
                 button.disabled = false;
                 return;
