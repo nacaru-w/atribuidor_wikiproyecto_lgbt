@@ -6,9 +6,12 @@ export type ArticleOrigin = 'created' | 'translated';
 /** Details gathered from the user before adding the article to the monthly event table. */
 export interface MonthlyEventDetails {
     origin: ArticleOrigin;
-    /** Wikidata item id (e.g. "Q91725538"), or null if the article has none. */
-    wikidataItem: string | null;
+    /** Wikidata item id (e.g. "Q91725538"). */
+    wikidataItem: string;
 }
+
+/** Shape of a Wikidata item id; the field is compulsory and must match it. */
+const WIKIDATA_ITEM_PATTERN = /^Q\d+$/i;
 
 /**
  * Asks the user whether the article should also be added to the
@@ -18,6 +21,10 @@ export async function confirmMonthlyEventAddition(): Promise<boolean> {
     await mw.loader.using(['oojs-ui-core', 'oojs-ui-windows']);
     return OO.ui.confirm(getMessage('monthly-event-confirm'), {
         title: getMessage('title'),
+        actions: [
+            { action: 'reject', label: getMessage('monthly-event-confirm-no'), flags: 'safe' },
+            { action: 'accept', label: getMessage('monthly-event-confirm-yes'), flags: ['primary', 'progressive'] },
+        ],
     });
 }
 
@@ -45,6 +52,8 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
     const wikidataInput = new OO.ui.TextInputWidget({
         value: suggestedWikidataItem,
         placeholder: 'Q91725538',
+        required: true,
+        validate: WIKIDATA_ITEM_PATTERN,
     });
 
     const fieldset = new OO.ui.FieldsetLayout({
@@ -56,6 +65,7 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
             new OO.ui.FieldLayout(wikidataInput, {
                 label: getMessage('monthly-event-wikidata-label'),
                 align: 'top',
+                help: getMessage('monthly-event-wikidata-help'),
             }),
         ],
     });
@@ -66,23 +76,33 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
     windowManager.addWindows([dialog]);
 
     try {
-        const closingData = await windowManager.openWindow(dialog, {
+        const windowInstance = windowManager.openWindow(dialog, {
             title: getMessage('monthly-event-dialog-title'),
             message: fieldset.$element,
             actions: [
                 { action: 'cancel', label: getMessage('monthly-event-cancel'), flags: 'safe' },
                 { action: 'accept', label: getMessage('monthly-event-accept'), flags: ['primary', 'progressive'] },
             ],
-        }).closed as { action?: string } | undefined;
+        });
 
+        // The accept button stays disabled until the compulsory Wikidata
+        // field holds a well-formed item id.
+        function updateAcceptAbility(): void {
+            const isValid = WIKIDATA_ITEM_PATTERN.test(wikidataInput.getValue().trim());
+            dialog.getActions().setAbilities({ accept: isValid });
+        }
+        await windowInstance.opened;
+        wikidataInput.on('change', updateAcceptAbility);
+        updateAcceptAbility();
+
+        const closingData = await windowInstance.closed as { action?: string } | undefined;
         if (closingData?.action !== 'accept') {
             return null;
         }
 
-        const wikidataItem = wikidataInput.getValue().trim();
         return {
             origin: originInput.getValue() as ArticleOrigin,
-            wikidataItem: wikidataItem || null,
+            wikidataItem: wikidataInput.getValue().trim().toUpperCase(),
         };
     } finally {
         windowManager.destroy();

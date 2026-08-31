@@ -22,7 +22,7 @@ const translations = {
         'monthly-event-origin-created': 'Artículo de nueva creación',
         'monthly-event-origin-translated': 'Traducción',
         'monthly-event-wikidata-label': 'Elemento de Wikidata (p. ej. Q91725538)',
-        'monthly-event-wikidata-help': 'Si el artículo todavía no tiene un elemento de Wikidata, créalo primero y copia aquí su identificador.',
+        'monthly-event-wikidata-help': 'El elemento de Wikidata asociado aparecerá descrito en este campo por defecto. Si el artículo todavía no tiene un elemento de Wikidata, créalo primero y copia aquí su identificador.',
         'monthly-event-accept': 'Añadir',
         'monthly-event-cancel': 'Cancelar',
         'status-monthly-event': 'Añadiendo el artículo a la tabla del evento del mes…',
