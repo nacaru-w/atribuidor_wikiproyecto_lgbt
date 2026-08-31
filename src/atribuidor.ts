@@ -1,7 +1,6 @@
 import { addArticleToMonthlyEvent } from './actions/addArticleToMonthlyEvent';
 import { addCreatedArticleToList } from './actions/addCreatedArticleToList';
 import { addProjectTemplate } from './actions/addProjectTemplate';
-import { updateArticleCounter } from './actions/updateArticleCounter';
 import { links } from './config/links';
 import { getMessage } from './i18n/translations';
 import { isArticleOnCreatedList } from './queries/isArticleOnCreatedList';
@@ -24,6 +23,8 @@ async function main(): Promise<void> {
     }
 
     await mw.loader.using(['mediawiki.notification', 'mediawiki.api']);
+
+    const articleTitle = mw.config.get('wgPageName').replace(/_/g, ' ');
 
     const statusElement = document.createElement('div');
     let statusNotification: Awaited<ReturnType<typeof mw.notify>> | null = null;
@@ -54,17 +55,14 @@ async function main(): Promise<void> {
     async function attribute(monthlyEventDetails: MonthlyEventDetails | null): Promise<boolean> {
         try {
             await showStatus(getMessage('status-template'));
-            await addProjectTemplate();
+            await addProjectTemplate(articleTitle);
 
             await showStatus(getMessage('status-list'));
-            await addCreatedArticleToList();
-
-            await showStatus(getMessage('status-counter'));
-            await updateArticleCounter();
+            await addCreatedArticleToList(articleTitle);
 
             if (monthlyEventDetails) {
                 await showStatus(getMessage('status-monthly-event'));
-                await addArticleToMonthlyEvent(monthlyEventDetails);
+                await addArticleToMonthlyEvent(articleTitle, monthlyEventDetails);
             }
 
             notifySuccess();
@@ -129,9 +127,12 @@ async function main(): Promise<void> {
 
             let monthlyEventDetails: MonthlyEventDetails | null = null;
             if (await confirmMonthlyEventAddition()) {
-                // A cancelled dialog (null) skips the monthly event step
-                // without aborting the rest of the attribution.
                 monthlyEventDetails = await promptMonthlyEventDetails();
+                // A cancelled dialog (null) aborts the whole attribution.
+                if (!monthlyEventDetails) {
+                    button.disabled = false;
+                    return;
+                }
             }
 
             if (await attribute(monthlyEventDetails)) {
@@ -143,7 +144,6 @@ async function main(): Promise<void> {
 
         heading.append(button);
 
-        const articleTitle = mw.config.get('wgPageName').replace(/_/g, ' ');
         try {
             const isListed = await isArticleOnCreatedList(articleTitle);
             if (isListed) {
