@@ -30,10 +30,18 @@ async function main(): Promise<void> {
     const articleTitle = mw.config.get('wgPageName').replace(/_/g, ' ');
 
     const statusElement = document.createElement('div');
+    statusElement.className = 'atribuidor-status';
+
+    const statusSpinner = document.createElement('img');
+    statusSpinner.src = links.spinner;
+
+    const statusText = document.createElement('span');
+    statusElement.append(statusSpinner, statusText);
+
     let statusNotification: Awaited<ReturnType<typeof mw.notify>> | null = null;
 
     async function showStatus(text: string): Promise<void> {
-        statusElement.textContent = text;
+        statusText.textContent = text;
         if (!statusNotification) {
             statusNotification = await mw.notify(statusElement, {
                 title: getMessage('title'),
