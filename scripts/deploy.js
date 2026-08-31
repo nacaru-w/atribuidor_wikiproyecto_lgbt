@@ -33,7 +33,7 @@ async function main() {
     const result = await bot.save(
         SCRIPT_PAGE,
         bundle,
-        'Actualización automática del Atribuidor ([[WP:AtribuidorLGBT|despliegue]])',
+        'Actualización automática del atribuidor ([[WP:Atribuidor_LGBT+|despliegue]])',
     );
 
     if (result.nochange) {
