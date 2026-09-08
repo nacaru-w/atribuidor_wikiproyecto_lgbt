@@ -26,6 +26,7 @@ const translations = {
         'monthly-event-origin-label': 'Tipo de artículo',
         'monthly-event-origin-created': 'Artículo de nueva creación',
         'monthly-event-origin-translated': 'Traducción',
+        'monthly-event-creator-label': 'Usuari@',
         'monthly-event-wikidata-label': 'Elemento de Wikidata (p. ej. Q91725538)',
         'monthly-event-wikidata-help': 'El elemento de Wikidata asociado aparecerá descrito en este campo por defecto. Si el artículo todavía no tiene un elemento de Wikidata, créalo primero y copia aquí su identificador.',
         'monthly-event-accept': 'Añadir',

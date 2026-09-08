@@ -8,6 +8,8 @@ export interface MonthlyEventDetails {
     origin: ArticleOrigin;
     /** Wikidata item id (e.g. "Q91725538"). */
     wikidataItem: string;
+    /** User name credited in the table, normally the article's creator. */
+    creator: string;
 }
 
 /** Shape of a Wikidata item id; the field is compulsory and must match it. */
@@ -29,14 +31,14 @@ export async function confirmMonthlyEventAddition(): Promise<boolean> {
 }
 
 /**
- * Shows a dialog asking for the monthly event details:
- * article origin (created vs. translated) and the Wikidata item.
- * The Wikidata field is prefilled automatically when the article
- * is connected to a Wikidata item, and left empty otherwise.
+ * Shows a dialog asking for the monthly event details: article origin
+ * (created vs. translated), the credited user and the Wikidata item.
+ * The creator field is prefilled with the given suggestion and the
+ * Wikidata field with the article's connected item, when there is one.
  *
  * @returns the chosen details, or null if the user cancelled the dialog.
  */
-export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails | null> {
+export async function promptMonthlyEventDetails(suggestedCreator: string): Promise<MonthlyEventDetails | null> {
     await mw.loader.using(['oojs-ui-core', 'oojs-ui-windows', 'oojs-ui-widgets']);
 
     // On articles connected to Wikidata this holds the Q-id; null otherwise.
@@ -47,6 +49,11 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
             { data: 'created', label: getMessage('monthly-event-origin-created') },
             { data: 'translated', label: getMessage('monthly-event-origin-translated') },
         ],
+    });
+
+    const creatorInput = new OO.ui.TextInputWidget({
+        value: suggestedCreator,
+        required: true,
     });
 
     const wikidataInput = new OO.ui.TextInputWidget({
@@ -60,6 +67,10 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
         items: [
             new OO.ui.FieldLayout(originInput, {
                 label: getMessage('monthly-event-origin-label'),
+                align: 'top',
+            }),
+            new OO.ui.FieldLayout(creatorInput, {
+                label: getMessage('monthly-event-creator-label'),
                 align: 'top',
             }),
             new OO.ui.FieldLayout(wikidataInput, {
@@ -85,13 +96,15 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
             ],
         });
 
-        // The accept button stays disabled until the compulsory Wikidata
-        // field holds a well-formed item id.
+        // The accept button stays disabled until the compulsory fields are
+        // filled in: a credited user and a well-formed Wikidata item id.
         function updateAcceptAbility(): void {
-            const isValid = WIKIDATA_ITEM_PATTERN.test(wikidataInput.getValue().trim());
+            const isValid = creatorInput.getValue().trim() !== ''
+                && WIKIDATA_ITEM_PATTERN.test(wikidataInput.getValue().trim());
             dialog.getActions().setAbilities({ accept: isValid });
         }
         await windowInstance.opened;
+        creatorInput.on('change', updateAcceptAbility);
         wikidataInput.on('change', updateAcceptAbility);
         updateAcceptAbility();
 
@@ -103,6 +116,7 @@ export async function promptMonthlyEventDetails(): Promise<MonthlyEventDetails |
         return {
             origin: originInput.getValue() as ArticleOrigin,
             wikidataItem: wikidataInput.getValue().trim().toUpperCase(),
+            creator: creatorInput.getValue().trim(),
         };
     } finally {
         windowManager.destroy();

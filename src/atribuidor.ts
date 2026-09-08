@@ -143,10 +143,11 @@ async function main(): Promise<void> {
                 return;
             }
 
+            let creator: string;
             let isCreatorParticipant: boolean;
             try {
                 await showStatus(getMessage('status-participant-check'));
-                const creator = await getArticleCreator(articleTitle);
+                creator = await getArticleCreator(articleTitle);
                 isCreatorParticipant = await isUserOnParticipantList(creator);
             } catch (error) {
                 notifyError(getMessage('error-participant-check'));
@@ -165,7 +166,7 @@ async function main(): Promise<void> {
 
             let monthlyEventDetails: MonthlyEventDetails | null = null;
             if (await confirmMonthlyEventAddition()) {
-                monthlyEventDetails = await promptMonthlyEventDetails();
+                monthlyEventDetails = await promptMonthlyEventDetails(creator);
                 // A cancelled dialog (null) aborts the whole attribution.
                 if (!monthlyEventDetails) {
                     closeStatus();

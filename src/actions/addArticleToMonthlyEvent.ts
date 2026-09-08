@@ -34,11 +34,6 @@ export async function addArticleToMonthlyEvent(articleTitle: string, details: Mo
     const eventPageTitle = getMonthlyEventPageTitle();
     const byteSize = await getArticleByteSize(articleTitle);
 
-    const userName = mw.config.get('wgUserName');
-    if (!userName) {
-        throw new Error('Could not determine the current user name');
-    }
-
     const api = new mw.Api();
     await api.edit(eventPageTitle, (revision) => {
         const wikitext = revision.content;
@@ -50,7 +45,7 @@ export async function addArticleToMonthlyEvent(articleTitle: string, details: Mo
         }
 
         const origin = details.origin === 'created' ? 'Creado' : 'Traducido';
-        const row = `| ${nextRowNumber(wikitext)} || [[${articleTitle}]] || ${origin} (${byteSize} bytes) || {{Q|${details.wikidataItem}}} || {{u|${userName}}}\n|-\n`;
+        const row = `| ${nextRowNumber(wikitext)} || [[${articleTitle}]] || ${origin} (${byteSize} bytes) || {{Q|${details.wikidataItem}}} || {{u|${details.creator}}}\n|-\n`;
 
         let insertionPoint = wikitext.indexOf(PLACEHOLDER_ROW);
         if (insertionPoint === -1) {
