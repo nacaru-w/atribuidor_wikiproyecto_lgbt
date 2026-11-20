@@ -25,7 +25,7 @@ async function main(): Promise<void> {
         return;
     }
 
-    await mw.loader.using(['mediawiki.notification', 'mediawiki.api']);
+    await mw.loader.using(['mediawiki.notification', 'mediawiki.api', 'mediawiki.Title']);
 
     const articleTitle = mw.config.get('wgPageName').replace(/_/g, ' ');
 
