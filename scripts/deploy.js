@@ -7,6 +7,7 @@
 const { readFile } = require('node:fs/promises');
 const path = require('node:path');
 const { Mwn } = require('mwn');
+const { version } = require('../package.json');
 
 const SCRIPT_PAGE = 'Usuario:Nacaru/atribuidor-wikiproyecto-lgbt.js';
 const BUNDLE_PATH = path.join(__dirname, '..', 'dist', 'atribuidor.js');
@@ -33,7 +34,7 @@ async function main() {
     const result = await bot.save(
         SCRIPT_PAGE,
         bundle,
-        'Actualización automática del atribuidor ([[WP:Atribuidor_LGBT+|despliegue]])',
+        `Actualización automática del atribuidor a la versión ${version} ([[WP:Atribuidor_LGBT+|despliegue]])`,
     );
 
     if (result.nochange) {
