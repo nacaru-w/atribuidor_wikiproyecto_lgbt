@@ -14,23 +14,28 @@ const YEAR_BLOCK_PATTERN = /\{\{Plegable\s*\|\s*título\s*=\s*(\d{4})/g;
  */
 const YEAR_LIST_END = '\n</div>';
 
-/**
- * Returns the position right after the last entry of the given year's
- * block, or -1 when the page has no block for that year.
- */
-function findYearListEnd(wikitext: string, year: number): number {
+/** Locates the year's block without borrowing a closing tag from the next year. */
+function findYearList(wikitext: string, year: number): { start: number; end: number } | null {
     YEAR_BLOCK_PATTERN.lastIndex = 0;
     let match: RegExpExecArray | null;
     while ((match = YEAR_BLOCK_PATTERN.exec(wikitext)) !== null) {
         if (Number(match[1]) === year) {
-            return wikitext.indexOf(YEAR_LIST_END, match.index);
+            const end = wikitext.indexOf(YEAR_LIST_END, match.index);
+            const nextYear = YEAR_BLOCK_PATTERN.exec(wikitext);
+            if (end === -1 || (nextYear && nextYear.index < end)) {
+                return null;
+            }
+            return { start: match.index, end };
         }
     }
-    return -1;
+    return null;
 }
 
-/** Matches the date of a list entry, e.g. "{{small|(15 de agosto)}}". */
-const ENTRY_DATE_PATTERN = /\{\{small\|\((\d{1,2}) de ([a-záéíóúü]+)\)\}\}/i;
+/** Entries use both "{{small|(15 de agosto)}}" and "{{small|15 de agosto}}". */
+const ENTRY_DATE_PATTERN = /\{\{\s*small\s*\|\s*\(?\s*(\d{1,2})\s+de\s+([a-záéíóúü]+)\s*\)?\s*\}\}/i;
+/** Older year blocks put the date before the link, e.g. "#27.X.2014 [[David Armstrong]]". */
+const LEGACY_ENTRY_DATE_PATTERN = /^#\s*(\d{1,2})\.([IVX]+)[.:]\d{4}(?=\s|$)/i;
+const ROMAN_MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 interface DayOfYear {
     month: number;
@@ -38,15 +43,17 @@ interface DayOfYear {
 }
 
 function parseEntryDate(entryLine: string): DayOfYear | null {
-    const match = entryLine.match(ENTRY_DATE_PATTERN);
-    if (!match) {
+    const written = entryLine.match(ENTRY_DATE_PATTERN);
+    if (written) {
+        const month = SPANISH_MONTHS.findIndex(name => name.toLowerCase() === written[2].toLowerCase());
+        return month === -1 ? null : { month, day: Number(written[1]) };
+    }
+    const legacy = entryLine.match(LEGACY_ENTRY_DATE_PATTERN);
+    if (!legacy) {
         return null;
     }
-    const month = SPANISH_MONTHS.findIndex((name) => name.toLowerCase() === match[2].toLowerCase());
-    if (month === -1) {
-        return null;
-    }
-    return { month, day: Number(match[1]) };
+    const month = ROMAN_MONTHS.indexOf(legacy[2].toUpperCase());
+    return month === -1 ? null : { month, day: Number(legacy[1]) };
 }
 
 function isAfter(a: DayOfYear, b: DayOfYear): boolean {
@@ -110,8 +117,8 @@ export async function addCreatedArticleToList(articleTitle: string): Promise<voi
         }
 
         const creationYear = creationDate.getFullYear();
-        const insertionPoint = findYearListEnd(wikitext, creationYear);
-        if (insertionPoint === -1) {
+        const yearList = findYearList(wikitext, creationYear);
+        if (!yearList) {
             throw new Error(`Could not find the ${creationYear} list on "${links.articleList}"`);
         }
 
@@ -121,26 +128,25 @@ export async function addCreatedArticleToList(articleTitle: string): Promise<voi
             day: creationDate.getDate(),
         };
 
-        // Walk back over the entries created after this article, so the new
-        // entry lands in chronological order. Anything unexpected (a non-entry
-        // line or an unparsable date) stops the walk, falling back to
-        // inserting at the end of the list.
-        const lines = wikitext.slice(0, insertionPoint).split('\n');
+        // Only dated entries determine placement. Keep all other lines in place.
+        const lines = wikitext.slice(yearList.start, yearList.end).split('\n');
         let entryIndex = lines.length;
-        while (entryIndex > 0) {
-            const previousLine = lines[entryIndex - 1];
-            if (!previousLine.startsWith('# ')) {
+        for (let i = lines.length - 1; i >= 0; i--) {
+            if (!/^#(?![#:;*])/.test(lines[i])) {
+                continue;
+            }
+            const previousDate = parseEntryDate(lines[i]);
+            if (!previousDate) {
+                continue;
+            }
+            if (!isAfter(previousDate, creationDayOfYear)) {
                 break;
             }
-            const previousDate = parseEntryDate(previousLine);
-            if (!previousDate || !isAfter(previousDate, creationDayOfYear)) {
-                break;
-            }
-            entryIndex--;
+            entryIndex = i;
         }
         lines.splice(entryIndex, 0, entry);
 
-        let text = lines.join('\n') + wikitext.slice(insertionPoint);
+        let text = wikitext.slice(0, yearList.start) + lines.join('\n') + wikitext.slice(yearList.end);
         text = bumpYearCounter(text, creationYear);
         text = bumpTotalCounter(text);
 
